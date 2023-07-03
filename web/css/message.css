@@ -1,0 +1,12 @@
+.message {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    border: black solid 3px;
+    margin: 1%;
+}
+
+.message_field {
+    margin: 3%;
+    text-align: center;
+}
+
