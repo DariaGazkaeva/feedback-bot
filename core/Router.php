@@ -79,5 +79,8 @@ class Router
         include PROJECT_ROOT."web/$name";
     }
 
-
+    public function renderJson(mixed $data): void {
+        header("Content-Type: application/json");
+        echo json_encode($data);
+    }
 }

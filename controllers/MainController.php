@@ -13,15 +13,18 @@ use function React\Promise\map;
 class MainController
 {
     private string $token = "6381506117:AAHRZUBQBL43RjVGJkY3zAPZJILA_6vm8pw";
+    private string $secret_key = 'sadf54f-BDFSHFJNfdsuy12m__dsf';
+    private string $secret_key_header = 'HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN';
     public function get(): void
     {
-
-        $this->update();
-
         $mapper = new UserMessageMapper();
-        $messages = $mapper->SelectAll()->getNextRow();
+        $selected = $mapper->SelectAll()->getNextRow();
+        $messages = [];
+        foreach ($selected as $item) {
+            array_push($messages, $item);
+        }
         Application::$app->getRouter()->renderTemplate("main",
-            ["messages"=>$messages]);
+            ["messages"=>array_reverse($messages)]);
     }
 
     public function answer(): void
@@ -46,41 +49,6 @@ class MainController
         }
     }
 
-    public function update(): void
-    {
-        if (!array_key_exists("last-update-id", $_SESSION)) {
-            $_SESSION["last-update-id"] = 0;
-        }
-        $updates = json_decode($this->getUpdates($_SESSION["last-update-id"] + 1), true);
-
-        if (count($updates["result"]) > 0 and $updates["ok"] === true) {
-            $_SESSION["last-update-id"] = end($updates["result"])["update_id"];
-            $mapper = new UserMessageMapper();
-
-            foreach ($updates["result"] as $update) {
-                $message = new UserMessage(
-                    null,
-                    $update["message"]["text"],
-                    date("Y-m-d", $update["message"]["date"]),
-                    $update["message"]["from"]["id"]);
-                $mapper->Insert($message);
-            }
-        } else if ($updates["ok"] === false) {
-            Application::$app->getRouter()->renderStatic("502.html");
-        }
-    }
-    private function getUpdates($offset=0): string
-    {
-        $params = array("offset" => $offset);
-        $ch = curl_init("https://api.telegram.org/bot". $this->token ."/getUpdates?" . http_build_query($params));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        $resultQuery = curl_exec($ch);
-        curl_close($ch);
-        return $resultQuery;
-    }
-
     private function sendMessage($chatId, $text): bool|string
     {
         $getQuery = array(
@@ -96,5 +64,32 @@ class MainController
         $resultQuery = curl_exec($ch);
         curl_close($ch);
         return $resultQuery;
+    }
+
+    public function getAnswers(): void
+    {
+        $mapper = new BotMessageMapper();
+        $answers = $mapper->doSelectAllByUserMessageId((int)$_GET["user-message-id"]);
+        Application::$app->getRouter()->renderJson($answers);
+    }
+
+    public function update(): void
+    {
+        $request_body = json_decode(file_get_contents('php://input'), true);
+        $request_message = $request_body['message'];
+        $secret_key = $_SERVER[$this->secret_key_header];
+
+        if ($secret_key !== $this->secret_key) {
+            Application::$app->getRouter()->renderStatic("403.html");
+            return;
+        }
+
+        $mapper = new UserMessageMapper();
+        $message = new UserMessage(
+            null,
+            $request_message["text"],
+            date("Y-m-d", $request_message["date"]),
+            $request_message["from"]["id"]);
+        $mapper->Insert($message);
     }
 }

@@ -1,7 +1,33 @@
+.message, .message button {
+    -o-transition: all 0.3s ease-in-out;
+    -moz-transition: all 0.3s ease-in-out;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+}
+
 .message {
+    grid-template-columns: 2fr 1fr 1fr;
+    background: linear-gradient(to top left, #E0E0E0, #ffffff);
+    max-width: 90%;
+}
+
+.message:hover {
+    -ms-transform: scale(1.04);
+    transform: scale(1.04);
+}
+
+.answer, .message {
     display: grid;
+    box-shadow: 5px 5px 5px gainsboro;
+    border-radius: .3rem;
+    border-top: gainsboro solid 1px;
+    border-left: gainsboro solid 1px;
+    margin: 1%;
+}
+
+.answer {
     grid-template-columns: 2fr 1fr;
-    border: black solid 3px;
+    width: 90%;
     margin: 1%;
 }
 
@@ -10,3 +36,27 @@
     text-align: center;
 }
 
+.message button {
+    background-color: white;
+    border: 1px solid white;
+    border-radius: .3rem;
+    color: black;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 1%;
+}
+
+.message button:hover {
+    -ms-transform: scale(1.05);
+    transform: scale(1.05);
+    background-color: #FF4040;
+}
+
+.no-answer {
+    font-size: medium;
+    font-weight: bold;
+    margin: 2%;
+}

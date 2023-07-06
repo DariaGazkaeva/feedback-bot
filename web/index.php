@@ -33,7 +33,8 @@ $router = $application->getRouter();
 
 $router->setGetRoute("/", [new MainController, "get"]);
 $router->setPostRoute("/", [new MainController, "answer"]);
-//$router->setGetRoute("/update", [new MainController, "update"]);
+$router->setPostRoute("/update", [new MainController, "update"]);
+$router->setGetRoute("/answers", [new MainController, "getAnswers"]);
 
 ob_start();
 $application->run();

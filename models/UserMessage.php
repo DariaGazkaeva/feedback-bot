@@ -25,6 +25,12 @@ class UserMessage extends Model
         $this->user_id = $user_id;
     }
 
+    public function __toString(): string
+    {
+        return "Message(id=" . $this->getId() . ",user_id=" . $this->user_id . ",date=" . $this->date . ",text=" . $this->text . ")";
+    }
+
+
     /**
      * @return string
      */

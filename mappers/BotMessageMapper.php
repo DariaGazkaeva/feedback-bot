@@ -8,12 +8,14 @@ use PhpParser\Node\Expr\Array_;
 
 class BotMessageMapper extends \app\core\Mapper
 {
-    private ?\PDOStatement $insert_b;
+    private ?\PDOStatement $insert;
+    private ?\PDOStatement $selectAllByUserMessageId;
 
     public function __construct()
     {
         parent::__construct();
-        $this->insert_b = $this->getPdo()->prepare("INSERT into bot_message (user_message_id, text, date) VALUES (:user_message_id, :text, :date)");
+        $this->insert = $this->getPdo()->prepare("INSERT into bot_message (user_message_id, text, date) VALUES (:user_message_id, :text, :date)");
+        $this->selectAllByUserMessageId = $this->getPdo()->prepare("SELECT * FROM bot_message WHERE user_message_id = :user_message_id");
     }
 
     /**
@@ -22,7 +24,7 @@ class BotMessageMapper extends \app\core\Mapper
      */
     protected function doInsert(Model $model): Model
     {
-        $this->insert_b->execute([
+        $this->insert->execute([
             ":user_message_id" => $model->getUserMessageId(),
             ":text" => $model->getText(),
             ":date" => $model->getDate()
@@ -30,6 +32,12 @@ class BotMessageMapper extends \app\core\Mapper
         $id = $this->getPdo()->lastInsertId();
         $model->setId($id);
         return $model;
+    }
+    public function doSelectAllByUserMessageId(int $userMessageId) : array {
+        $this->selectAllByUserMessageId->execute([":user_message_id" => $userMessageId]);
+        $selected = $this->selectAllByUserMessageId->fetchAll();
+        if ($selected === false) return [];
+        return $selected;
     }
     function createObject(array $data): Model
     {

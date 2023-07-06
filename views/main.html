@@ -3,21 +3,56 @@
 {% block title %} Feedback {% endblock %}
 
 {% block headers %}
+<link rel="stylesheet" type="text/css" href="../web/css/reset.css">
+<link rel="stylesheet" type="text/css" href="../web/css/main.css">
 <link rel="stylesheet" type="text/css" href="../web/css/message.css">
+<link rel="stylesheet" type="text/css" href="../web/css/modal.css">
+<script src="../web/js/main.js"></script>
 {% endblock %}
 
-
 {% block content %}
+<div class="header">
+    <a href="" class="update-button">Update</a>
+</div>
+<div class="feedback-container">
     {%
         foreach ($messages as $m) {
             $text = $m->getText();
             $date = $m->getDate();
             $id = $m->getId();
-            echo "<div class='message'><div class='message_field'>$text</div><div class='message_field'>$date</div></div>";
-            echo "<form action='' method='post'><textarea name='text'></textarea><input type='hidden' name='user-message-id' value='$id'><input type='submit' value='Send'></form>";
+            echo "
+                <div class='message' id='$id'>
+                    <div class='message_field'>
+                        $text
+                    </div>
+                    <div class='message_field'>
+                        $date
+                    </div>
+                    <div class='message_field'>
+                        <button class='reply-button'>Reply</button>
+                        <button class='see-button'>See answers</button>
+                    </div>
+                </div>
+            ";
         }
     %}
+    <div class="modal reply_modal">
+        <div class="content_modal">
+            <button class="reply-close">Close</button>
+            <form action='' method='post' class="reply-form">
+                <label for="textarea">Your answer:</label>
+                <textarea name='text' id="textarea" rows="5" cols="20" required></textarea>
+                <br>
+                <input type='submit' value='Send'>
+            </form>
+        </div>
+    </div>
 
-<a href="update">Update</a>
+    <div class="modal see_modal">
+        <div class="content_modal">
+            <button class="see-close">Close</button>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
