@@ -87,17 +87,14 @@ class MainController
         $mapper = new UserMessageMapper();
 
         $photoArrayTg = $request_message['photo'];
+        $animationTg = $request_message['animation'];
+
         $fileName = null;
         if ($photoArrayTg !== null) {
-
             $photoTg = end($photoArrayTg);
-            $fileId = $photoTg['file_id'];
-            $fileDataTg = $this->getFileData(['file_id' => $fileId]);
-            $filePathTg = $fileDataTg['result']['file_path'];
-            $fileName = $this->generateFileName($filePathTg);
-            $filePathDist = $this->generateFilePath($fileName);
-            $this->downloadMedia($filePathTg, $filePathDist);
-
+            $fileName = $this->doDownloadMedia($photoTg);
+        } else if ($animationTg !== null) {
+            $fileName = $this->doDownloadMedia($animationTg);
         }
 
         $message = new UserMessage(
@@ -141,8 +138,19 @@ class MainController
         return PROJECT_ROOT."/web/media/".$fileName;
     }
 
-    private function downloadMedia(string $filePathSource, string $filePathDist): bool {
+    private function downloadMedia(string $filePathSource, string $filePathDist): void
+    {
         $realSource = "https://api.telegram.org/file/bot".$this->token."/".$filePathSource;
-        return copy($realSource, $filePathDist);
+        copy($realSource, $filePathDist);
+    }
+
+    private function doDownloadMedia(array $dataTg): string {
+        $fileId = $dataTg['file_id'];
+        $fileDataTg = $this->getFileData(['file_id' => $fileId]);
+        $filePathTg = $fileDataTg['result']['file_path'];
+        $fileName = $this->generateFileName($filePathTg);
+        $filePathDist = $this->generateFilePath($fileName);
+        $this->downloadMedia($filePathTg, $filePathDist);
+        return $fileName;
     }
 }

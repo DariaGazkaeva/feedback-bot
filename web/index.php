@@ -5,7 +5,7 @@ use app\core\Application;
 use app\core\ConfigParser;
 
 //Возвращает файлы напрямую
-if (preg_match('/\.(?:png|jpg|jpeg|gif|css|html?|js)$/', $_SERVER["REQUEST_URI"])) {
+if (preg_match('/\.(?:png|jpg|jpeg|gif|css|mp4|html?|js)$/', $_SERVER["REQUEST_URI"])) {
     return false;
 }
 

@@ -31,10 +31,19 @@
             }
             if ($media !== null and $media !== '') {
                 $filePath = '../web/media/'.$media;
-                echo "
+
+                if (str_ends_with($filePath, '.jpg') or str_ends_with($filePath, '.jpeg') or str_ends_with($filePath, '.png') or str_ends_with($filePath, '.gif')) {
+                    echo "
                     <div class='message_field'>
-                        <img src='$filePath'  alt='image'/>
+                        <img src='$filePath'  alt='media'/>
                     </div>";
+                } else if (str_ends_with($filePath, '.mp4')) {
+                    echo "<div class='message_field'>
+                        <video autoplay muted loop src='$filePath'>
+                            Your browser does not support the video.
+                        </video>
+                    </div>";
+                }
             }
             echo "
                     <div class='message_field'>

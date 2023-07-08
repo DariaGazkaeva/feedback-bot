@@ -41,6 +41,11 @@
     max-height: 90vh;
 }
 
+.message_field video {
+    max-width: 40%;
+    max-height: 90vh;
+}
+
 .message button {
     background-color: white;
     border: 1px solid white;
