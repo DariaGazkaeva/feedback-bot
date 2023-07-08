@@ -13,8 +13,8 @@ use function React\Promise\map;
 class MainController
 {
     private string $token = "6381506117:AAHRZUBQBL43RjVGJkY3zAPZJILA_6vm8pw";
-    private string $secret_key = 'sadf54f-BDFSHFJNfdsuy12m__dsf';
-    private string $secret_key_header = 'HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN';
+    private string $secretKey = 'sadf54f-BDFSHFJNfdsuy12m__dsf';
+    private string $secretKeyHeader = 'HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN';
     public function get(): void
     {
         $mapper = new UserMessageMapper();
@@ -77,19 +77,72 @@ class MainController
     {
         $request_body = json_decode(file_get_contents('php://input'), true);
         $request_message = $request_body['message'];
-        $secret_key = $_SERVER[$this->secret_key_header];
+        $secret_key = $_SERVER[$this->secretKeyHeader];
 
-        if ($secret_key !== $this->secret_key) {
+        if ($secret_key !== $this->secretKey) {
             Application::$app->getRouter()->renderStatic("403.html");
             return;
         }
 
         $mapper = new UserMessageMapper();
+
+        $photoArrayTg = $request_message['photo'];
+        $fileName = null;
+        if ($photoArrayTg !== null) {
+
+            $photoTg = end($photoArrayTg);
+            $fileId = $photoTg['file_id'];
+            $fileDataTg = $this->getFileData(['file_id' => $fileId]);
+            $filePathTg = $fileDataTg['result']['file_path'];
+            $fileName = $this->generateFileName($filePathTg);
+            $filePathDist = $this->generateFilePath($fileName);
+            $this->downloadMedia($filePathTg, $filePathDist);
+
+        }
+
         $message = new UserMessage(
             null,
-            $request_message["text"],
+            $request_message['text'],
+            $fileName,
             date("Y-m-d", $request_message["date"]),
-            $request_message["from"]["id"]);
+            $request_message["from"]["id"]
+        );
         $mapper->Insert($message);
+    }
+
+    private function getFileData($requestParams): mixed
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, "https://api.telegram.org/bot" . $this->token . '/getFile?'.http_build_query($requestParams));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $headers = array();
+        $headers[] = "Accept: application/json";
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $fileDataString = curl_exec($ch);
+        if (curl_errno($ch)) {
+            Application::$app->getLogger()->warning('Error:' . curl_error($ch));
+        }
+        curl_close($ch);
+        return json_decode($fileDataString, true);
+    }
+
+    private function generateFileName(string $filePathSource): string {
+        $array = explode(".", $filePathSource);
+        $ext = end($array);
+        return time().".".$ext;
+    }
+
+    private function generateFilePath(string $fileName): string {
+        return PROJECT_ROOT."/web/media/".$fileName;
+    }
+
+    private function downloadMedia(string $filePathSource, string $filePathDist): bool {
+        $realSource = "https://api.telegram.org/file/bot".$this->token."/".$filePathSource;
+        return copy($realSource, $filePathDist);
     }
 }

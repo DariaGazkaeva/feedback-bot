@@ -36,6 +36,11 @@
     text-align: center;
 }
 
+.message_field img {
+    max-width: 40%;
+    max-height: 90vh;
+}
+
 .message button {
     background-color: white;
     border: 1px solid white;

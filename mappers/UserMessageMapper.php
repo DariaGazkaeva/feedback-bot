@@ -8,15 +8,15 @@ use PhpParser\Node\Expr\Array_;
 
 class UserMessageMapper extends \app\core\Mapper
 {
-    private ?\PDOStatement $insert_u;
-    private ?\PDOStatement $selectAll_u;
+    private ?\PDOStatement $insert;
+    private ?\PDOStatement $selectAll;
     private ?\PDOStatement $selectUserIdByUserMessageId;
 
     public function __construct()
     {
         parent::__construct();
-        $this->insert_u = $this->getPdo()->prepare("INSERT into user_message (user_id, text, date) VALUES (:user_id, :text, :date)");
-        $this->selectAll_u = $this->getPdo()->prepare("SELECT * FROM user_message");
+        $this->insert = $this->getPdo()->prepare("INSERT into user_message (user_id, text, date, media) VALUES (:user_id, :text, :date, :media)");
+        $this->selectAll = $this->getPdo()->prepare("SELECT * FROM user_message");
         $this->selectUserIdByUserMessageId = $this->getPdo()->prepare("SELECT user_id FROM user_message WHERE id = :id");
     }
 
@@ -26,10 +26,11 @@ class UserMessageMapper extends \app\core\Mapper
      */
     protected function doInsert(Model $model): Model
     {
-        $this->insert_u->execute([
+        $this->insert->execute([
             ":user_id" => $model->getUserId(),
             ":text" => $model->getText(),
-            ":date" => $model->getDate()
+            ":date" => $model->getDate(),
+            ":media" => $model->getMedia()
         ]);
         $id = $this->getPdo()->lastInsertId();
         $model->setId($id);
@@ -37,8 +38,8 @@ class UserMessageMapper extends \app\core\Mapper
     }
     protected function doSelectAll(): array
     {
-        if ($this->selectAll_u->execute()) {
-            $fetched = $this->selectAll_u->fetchAll();
+        if ($this->selectAll->execute()) {
+            $fetched = $this->selectAll->fetchAll();
             if ($fetched !== false) return $fetched;
         }
         return [];
@@ -54,7 +55,8 @@ class UserMessageMapper extends \app\core\Mapper
     {
         return new UserMessage(
             array_key_exists("id", $data) ? $data["id"] : null,
-            $data["text"],
+            array_key_exists("text", $data) ? $data["text"] : null,
+            array_key_exists("media", $data) ? $data["media"] : null,
             $data["date"],
             array_key_exists("user_id", $data) ? $data["user_id"] : null
         );

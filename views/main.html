@@ -18,13 +18,25 @@
     {%
         foreach ($messages as $m) {
             $text = $m->getText();
+            $media = $m->getMedia();
             $date = $m->getDate();
             $id = $m->getId();
-            echo "
-                <div class='message' id='$id'>
+
+            echo "<div class='message' id='$id'>";
+            if ($text !== '' and $text !== null) {
+                echo "
                     <div class='message_field'>
                         $text
-                    </div>
+                    </div>";
+            }
+            if ($media !== null and $media !== '') {
+                $filePath = '../web/media/'.$media;
+                echo "
+                    <div class='message_field'>
+                        <img src='$filePath'  alt='image'/>
+                    </div>";
+            }
+            echo "
                     <div class='message_field'>
                         $date
                     </div>
