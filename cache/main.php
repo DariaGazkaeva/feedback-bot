@@ -29,34 +29,52 @@
                 echo "
                     <div class='message_field'>
                         $text
-                    </div>";
-            }
-            if ($media !== null and $media !== '') {
-                $filePath = '../web/media/'.$media;
-
-                if (str_ends_with($filePath, '.jpg') or str_ends_with($filePath, '.jpeg') or str_ends_with($filePath, '.png') or str_ends_with($filePath, '.gif')) {
-                    echo "
-                    <div class='message_field'>
-                        <img src='$filePath'  alt='media'/>
-                    </div>";
-                } else if (str_ends_with($filePath, '.mp4')) {
-                    echo "<div class='message_field'>
-                        <video autoplay muted loop src='$filePath'>
-                            Your browser does not support the video.
-                        </video>
-                    </div>";
-                }
-            }
-            echo "
+                    </div>
                     <div class='message_field'>
                         $date
                     </div>
                     <div class='message_field'>
                         <button class='reply-button'>Reply</button>
                         <button class='see-button'>See answers</button>
+                    </div>";
+                echo "<div class='message_field'>";
+                        foreach ($media as $i) {
+                            $fileName = $i->getFileName();
+                            $filePath = '../web/media/'.$fileName;
+                            if (str_ends_with($filePath, '.jpg') or str_ends_with($filePath, '.jpeg') or str_ends_with($filePath, '.png') or str_ends_with($filePath, '.gif')) {
+                                echo "<img src='$filePath'  alt='media'/>";
+                            } else if (str_ends_with($filePath, '.mp4')) {
+                                echo "
+                                    <video autoplay muted loop src='$filePath'>
+                                        Your browser does not support the video.
+                                    </video>";
+                            }
+                        }
+                    echo "</div>";
+            } else {
+                echo "<div class='message_field'>";
+                foreach ($media as $i) {
+                    $fileName = $i->getFileName();
+                    $filePath = '../web/media/'.$fileName;
+                    if (str_ends_with($filePath, '.jpg') or str_ends_with($filePath, '.jpeg') or str_ends_with($filePath, '.png') or str_ends_with($filePath, '.gif')) {
+                        echo "<img src='$filePath'  alt='media'/>";
+                    } else if (str_ends_with($filePath, '.mp4')) {
+                        echo "<video autoplay muted loop src='$filePath'>
+                                    Your browser does not support the video.
+                                </video>";
+                    }
+                }
+                echo "</div>";
+                echo "
+                    <div class='message_field'>
+                        $date
                     </div>
-                </div>
-            ";
+                    <div class='message_field'>
+                        <button class='reply-button'>Reply</button>
+                        <button class='see-button'>See answers</button>
+                    </div>";
+            }
+            echo "</div>";
         } ?>
     <div class="modal reply_modal">
         <div class="content_modal">

@@ -5,8 +5,10 @@ namespace app\controllers;
 
 use app\core\Application;
 use app\mappers\BotMessageMapper;
+use app\mappers\MediaMapper;
 use app\mappers\UserMessageMapper;
 use app\models\BotMessage;
+use app\models\Media;
 use app\models\UserMessage;
 use function React\Promise\map;
 
@@ -18,11 +20,7 @@ class MainController
     public function get(): void
     {
         $mapper = new UserMessageMapper();
-        $selected = $mapper->SelectAll()->getNextRow();
-        $messages = [];
-        foreach ($selected as $item) {
-            array_push($messages, $item);
-        }
+        $messages = $mapper->selectAllWithMedia();
         Application::$app->getRouter()->renderTemplate("main",
             ["messages"=>array_reverse($messages)]);
     }
@@ -37,7 +35,7 @@ class MainController
             $chatId = $userMapper->doSelectUserIdByUserMessageId($userMessageId);
             if ($chatId !== -1) {
                 if ($this->sendMessage($chatId, $_POST["text"]) !== false) {
-                    $message = new BotMessage(null, $_POST["text"], date("y-m-d"), $userMessageId);
+                    $message = new BotMessage(null, $_POST["text"], date("Y-m-d"), $userMessageId);
                     $botMapper = new BotMessageMapper();
                     $botMapper->Insert($message);
 
@@ -79,17 +77,27 @@ class MainController
         $request_message = $request_body['message'];
         $secret_key = $_SERVER[$this->secretKeyHeader];
 
+        Application::$app->getLogger()->debug(json_encode($request_message));
+
         if ($secret_key !== $this->secretKey) {
             Application::$app->getRouter()->renderStatic("403.html");
+            http_response_code(403);
             return;
         }
 
-        $mapper = new UserMessageMapper();
+        $userMessageMapper = new UserMessageMapper();
+        $mediaMapper = new MediaMapper();
 
+        $messageId = (int)$request_message['message_id'];
         $photoArrayTg = $request_message['photo'];
         $animationTg = $request_message['animation'];
-
+        $mediaGroupId = $request_message['media_group_id'];
+        $caption = $request_message['caption'];
+        $userId = $request_message["from"]["id"];
+        $date = date("Y-m-d", $request_message["date"]);
+        $text = $request_message['text'];
         $fileName = null;
+
         if ($photoArrayTg !== null) {
             $photoTg = end($photoArrayTg);
             $fileName = $this->doDownloadMedia($photoTg);
@@ -97,14 +105,31 @@ class MainController
             $fileName = $this->doDownloadMedia($animationTg);
         }
 
-        $message = new UserMessage(
-            null,
-            $request_message['text'],
-            $fileName,
-            date("Y-m-d", $request_message["date"]),
-            $request_message["from"]["id"]
-        );
-        $mapper->Insert($message);
+        if ($mediaGroupId === null) {
+            $text = $text !== null ? $text : $caption;
+            $message = new UserMessage($messageId, $userId, $date, null, $text,null);
+            $userMessageMapper->Insert($message);
+            if ($fileName !== null) {
+                $media = new Media(null, $fileName, $messageId);
+                $mediaMapper->Insert($media);
+            }
+        } else {
+            $message = $userMessageMapper->findByMediaGroupId($mediaGroupId);
+            if ($message === null) {
+                $text = $text !== null ? $text : $caption;
+                $message = new UserMessage($messageId, $userId, $date, $mediaGroupId, $text,null);
+                $userMessageMapper->Insert($message);
+                if ($fileName !== null) {
+                    $media = new Media(null, $fileName, $messageId);
+                    $mediaMapper->Insert($media);
+                }
+            } else {
+                if ($fileName !== null) {
+                    $media = new Media(null, $fileName, $message->getId());
+                    $mediaMapper->Insert($media);
+                }
+            }
+        }
     }
 
     private function getFileData($requestParams): mixed

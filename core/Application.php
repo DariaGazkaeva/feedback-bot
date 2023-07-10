@@ -28,6 +28,7 @@ class Application
             $this->router->resolve();
         } catch (\Exception $exception) {
             $this->logger->error("Can not resolve route");
+            $this->logger->error($exception->getMessage());
             $this->response->setStatusCode(Response::HTTP_SERVER_ERROR);
         }
     }
